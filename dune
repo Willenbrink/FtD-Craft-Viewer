@@ -1,0 +1,10 @@
+(executable
+ (name FtD_Parser)
+ (libraries yojson str gg)
+ (preprocess
+  (pps ppx_yojson_conv ppx_deriving.show))
+)
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
