@@ -75,9 +75,13 @@ type blueprint = {
   persistent_block_index : int [@key "PersistentBlockIndex"];
   author_details : author_details [@key "AuthorDetails"] [@opaque];
   block_count : int [@key "BlockCount"];
+  (* id : int [@key "Id"];
+   * last_alive_block : int [@key "LastAliveBlock"];
+   * index_of_first_block_needing_full_repair_cost : int [@key "IndexOfFirstBlockNeedingFullRepairCost"]; *)
+
 } [@@deriving show, yojson]
 
-type vehicle = {
+type construct = {
   file_model_version : version [@key "FileModelVersion"];
   name : string option [@key "Name"];
   version : int [@key "Version"];
@@ -87,3 +91,22 @@ type vehicle = {
   item_dictionary : item_dictionary [@key "ItemDictionary"];
   blueprint : blueprint [@key "Blueprint"];
 } [@@deriving show, yojson]
+
+let parse_construct t =
+  (try
+    Yo.Util.(
+      t
+      |> member "Blueprint"
+      |> member "GameVersion"
+      |> to_string
+      |> (fun str -> str,
+                     try match str |> String.split_on_char '.' |> List.map int_of_string with
+                         (3::_) -> true
+                       | (2::minor::_) -> minor >= 7
+                       | (1::_) -> false
+                       | _ -> false
+                     with _ -> false)
+      |> (fun (str,supported) -> if not supported then raise (Unsupported_Version str) else ())
+    )
+  with _ -> raise (Unsupported_Version "Error getting version"));
+  construct_of_yojson t

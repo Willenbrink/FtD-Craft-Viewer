@@ -1,3 +1,5 @@
+(* Helpful regex: s/ \(\w*\)/  \1 : Yo.t [@key "\1"];\n/g *)
+
 module Yo = struct
   include Yojson.Safe
 
@@ -32,5 +34,6 @@ let (|>>) (a,b) f = (f a,b)
 let (||>) (a,b) f = (a,f b)
 
 exception Invariant_violated
+exception Unsupported_Version of string
 
 let check f x = if f x then x else raise Invariant_violated
