@@ -66,7 +66,10 @@ let () =
   Printexc.record_backtrace true;
   Arg.parse spec (fun _ -> raise Generic) "";
   try
-    main ()
+    let start = Sys.time () in
+    main ();
+    let stop = Sys.time () in
+    Printf.printf "Executed in %fs\n" (stop -. start)
   with exn -> Printexc.print_backtrace stderr;
     match exn with
       Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, json) ->
