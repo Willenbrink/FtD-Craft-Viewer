@@ -1,6 +1,6 @@
 (executable
- (name FtD_Parser)
- (libraries yojson str gg)
+ (name Unto_the_beach)
+ (libraries ftd_parser)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving.show))
 )

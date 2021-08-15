@@ -10,6 +10,7 @@ type rotation =
   | Unknown of int
 [@@deriving show]
 let rotation_of_int t = match t with
+   x -> Unknown x
   | 0 -> Forward
   | 1 -> Right
   | 2 -> Back
@@ -39,7 +40,8 @@ let rotation_of_int t = match t with
   | 11 -> Up
   | x -> Printf.fprintf stderr "Unknown rotation: %i.\n" x; Unknown x
 
-let int_of_rotation t = 0
+let int_of_rotation t = match t with
+  Unknown x -> x
 
 type item_dictionary = (int * Common.guid) list [@@deriving show]
 
@@ -161,4 +163,15 @@ let internal_of_construct ({name; version; file_model_version; saved_total_block
   contained_material_cost;
   item_dictionary;
   blueprint = blueprint_int_of_blueprint blueprint;
+  }
+
+let construct_of_internal {name; version; file_model_version; saved_total_block_count; saved_material_cost; contained_material_cost; item_dictionary; blueprint;} : Ftd_rep.construct = {
+  name;
+  version;
+  file_model_version;
+  saved_total_block_count;
+  saved_material_cost;
+  contained_material_cost;
+  item_dictionary;
+  blueprint = blueprint_of_blueprint_int blueprint;
   }
