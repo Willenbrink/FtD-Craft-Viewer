@@ -42,3 +42,21 @@ exception Invariant_violated
 exception Unsupported_Version of string
 
 let check f x = if !Cli.check_invars then if f x then x else raise Invariant_violated else x
+
+let ftd_res = "~/.local/share/Steam/steamapps/common/From\\ The\\ Depths/From_The_Depths_Data/StreamingAssets/"
+
+let find regex path =
+  let ic = Unix.open_process_in ("fd " ^ regex ^ " " ^ path) in
+  let res = ref [] in
+  (try
+    while true
+    do
+      res := input_line ic :: !res
+    done
+   with End_of_file -> ());
+  !res
+
+let get_files regex path =
+  find regex path
+  |> List.sort (String.compare)
+  |> List.map (fun path -> Str.split (Str.regexp "/") path |> List.rev |> List.hd, path)

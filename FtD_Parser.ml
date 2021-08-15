@@ -1,30 +1,12 @@
 open Util
 open Cli
 
-let personal_cons = "/home/sewi/From\\ The\\ Depths/Player\\ Profiles/Ropianos/Constructables/"
-let ftd_res = "/home/sewi/.local/share/Steam/steamapps/common/From\\ The\\ Depths/From_The_Depths_Data/StreamingAssets/"
+let personal_cons = "~/From\\ The\\ Depths/Player\\ Profiles/Ropianos/Constructables/"
 
 let bp_path = personal_cons
 let bp_path = ftd_res
 
-let find regex path =
-  let ic = Unix.open_process_in ("fd " ^ regex ^ " " ^ path) in
-  let res = ref [] in
-  (try
-    while true
-    do
-      res := input_line ic :: !res
-    done
-   with End_of_file -> ());
-  !res
-
-
 let main () =
-  let get_files file_list =
-    file_list
-    |> List.sort (String.compare)
-    |> List.map (fun path -> Str.split (Str.regexp "/") path |> List.rev |> List.hd, path)
-  in
   let try_parse parser (name,path) =
     try
       if !verbose then Printf.printf "Reading >%s< at path >%s<\n" name path;
@@ -37,15 +19,13 @@ let main () =
     List.fold_left_map (fun acc x -> match f x with None -> (acc + 1,None) | Some x -> (acc,Some x)) 0 xs
     ||> List.filter_map Fun.id
   in
-  let constructs () =
-    find ".*\\.blueprint$" bp_path
-    |> get_files
-    |> try_and_count (try_parse Ftd_rep.parse_construct)
-  in
   let items () =
-    find ".*\\\\.item$" ftd_res
-    |> get_files
+    get_files ".*\\\\.item$" ftd_res
     |> try_and_count (try_parse Item.item_of_yojson)
+  in
+  let constructs () =
+    get_files ".*\\.blueprint$" bp_path
+    |> try_and_count (try_parse Ftd_rep.parse_construct)
   in
   let (item_fails, items) = if !read_items || !print_items then items () |>> Option.some ||> Option.some else (None,None) in
   let (cons_fails, cons) = if !read_cons || !print_cons then constructs () |>> Option.some ||> Option.some else (None,None) in
