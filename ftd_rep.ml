@@ -2,10 +2,11 @@ open Util
 
 type version = {
   major : int [@key "Major"];
-  minor : int [@key "Minor"]
+  minor : int [@key "Minor"];
 } [@@deriving show, yojson]
+let version_of_yojson t = [%of_yojson: version] t |> check (fun v -> v.major = 1 && v.minor = 0)
 
-type item_dictionary = (int * string) list [@@deriving show]
+type item_dictionary = (int * Common.guid) list [@@deriving show]
 let item_dictionary_of_yojson t = Yo.Util.to_assoc t |> List.map (fun (id,x) -> (int_of_string id, string_of_yojson x))
 let yojson_of_item_dictionary t = `Assoc (List.map (fun (id,x) -> (string_of_int id, `String x)) t)
 
@@ -65,7 +66,7 @@ type blueprint = {
   total_block_count : int [@key "TotalBlockCount"];
   max_cords : v3i [@key "MaxCords"];
   min_cords : v3i [@key "MinCords"];
-  block_ids : int list [@key "BlockIds"] [@opaque];
+  block_ids : int list [@key "BlockIds"];
   block_state : Yo.t [@key "BlockState"];
   alive_count : int [@key "AliveCount"];
   block_string_data : Yo.t [@key "BlockStringData"];
@@ -78,7 +79,6 @@ type blueprint = {
   (* id : int [@key "Id"];
    * last_alive_block : int [@key "LastAliveBlock"];
    * index_of_first_block_needing_full_repair_cost : int [@key "IndexOfFirstBlockNeedingFullRepairCost"]; *)
-
 } [@@deriving show, yojson]
 
 type construct = {

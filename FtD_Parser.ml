@@ -1,4 +1,5 @@
 open Util
+open Cli
 
 let personal_cons = "/home/sewi/From\\ The\\ Depths/Player\\ Profiles/Ropianos/Constructables/"
 let ftd_res = "/home/sewi/.local/share/Steam/steamapps/common/From\\ The\\ Depths/From_The_Depths_Data/StreamingAssets/"
@@ -19,34 +20,51 @@ let find regex path =
 
 
 let main () =
-  let regex = Str.regexp ".*\\.blueprint$" in
-  let bp_files path =
-    find ".*\\.blueprint" path
+  let get_files file_list =
+    file_list
     |> List.sort (String.compare)
     |> List.map (fun path -> Str.split (Str.regexp "/") path |> List.rev |> List.hd, path)
-    |> List.filter (fun (name,_) -> Str.string_match regex name 0)
-    (* |> List.filter (fun str -> Str.string_match (Str.regexp "sample") str 0) *)
   in
-  let try_vehicle_of_yojson (name,path) =
+  let try_parse parser (name,path) =
     try
-      Printf.printf "Reading >%s< at path >%s<\n" name path;
+      if !verbose then Printf.printf "Reading >%s< at path >%s<\n" name path;
       Yojson.Safe.from_file path
-      |> Ftd_rep.parse_construct
+      |> parser
       |> Option.some
-    with Unsupported_Version v -> Printf.printf "Construct %s uses unsupported version %s\n" name v; None
+    with Unsupported_Version v -> Printf.printf "File %s uses unsupported version %s\n" name v; None
   in
-  let bp_safe = List.filter_map try_vehicle_of_yojson (bp_files bp_path) in
+  let try_and_count f xs =
+    List.fold_left_map (fun acc x -> match f x with None -> (acc + 1,None) | Some x -> (acc,Some x)) 0 xs
+    ||> List.filter_map Fun.id
+  in
+  let constructs () =
+    find ".*\\.blueprint$" bp_path
+    |> get_files
+    |> try_and_count (try_parse Ftd_rep.parse_construct)
+  in
+  let items () =
+    find ".*\\\\.item$" ftd_res
+    |> get_files
+    |> try_and_count (try_parse Item.item_of_yojson)
+  in
+  let (item_fails, items) = if !read_items || !print_items then items () |>> Option.some ||> Option.some else (None,None) in
+  let (cons_fails, cons) = if !read_cons || !print_cons then constructs () |>> Option.some ||> Option.some else (None,None) in
+  (match items with
+    Some items -> if !print_items then List.iter (fun x -> x |> Item.show_item |> print_endline; print_endline "") items
+   | None -> ());
+  (match cons with
+    Some cons -> if !print_cons then List.iter (fun x -> x |> Ftd_rep.show_construct |> print_endline; print_endline "") cons
+   | None -> ());
+  (match item_fails with
+     Some i -> Printf.printf "Failed to parse %i items.\n" i
+   | None -> ());
+  (match cons_fails with
+     Some i -> Printf.printf "Failed to parse %i constructs.\n" i
+   | None -> ())
 
-  List.map (fun x -> x |> Ftd_rep.show_construct |> print_endline; print_endline "") bp_safe |> ignore;
-  ()
-  (*
-  List.map (fun x -> x.blueprint.csi |> show_csi |> print_endline) bp_safe |> ignore;
-  List.map (fun x -> [%yojson_of: string list option] x.blueprint.col |> Yo.show |> print_endline) bp_safe |> ignore;
-   *  Yo.to_channel stdout fst.item_dictionary
-   * *)
-
-let _ =
+let () =
   Printexc.record_backtrace true;
+  Arg.parse spec (fun _ -> raise Generic) "";
   try
     main ()
   with exn -> Printexc.print_backtrace stderr;
