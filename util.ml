@@ -41,4 +41,4 @@ exception Generic
 exception Invariant_violated
 exception Unsupported_Version of string
 
-let check f x = if f x then x else raise Invariant_violated
+let check f x = if !Cli.check_invars then if f x then x else raise Invariant_violated else x
