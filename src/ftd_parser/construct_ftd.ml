@@ -1,25 +1,8 @@
 open Util
-open Common
 
-type version = {
-  major : int [@key "Major"];
-  minor : int [@key "Minor"];
-} [@@deriving show, yojson]
-let version_of_yojson t = [%of_yojson: version] t |> check (fun v -> v.major = 1 && v.minor = 0)
-
-type item_dictionary = (int * guid) list [@@deriving show]
+type item_dictionary = (int * Common.guid) list [@@deriving show]
 let item_dictionary_of_yojson t = Yo.Util.to_assoc t |> List.map (fun (id,x) -> (int_of_string id, string_of_yojson x))
 let yojson_of_item_dictionary t = `Assoc (List.map (fun (id,x) -> (string_of_int id, `String x)) t)
-
-(* GUIDs are IDs used everywhere and unique to everything. That means, authors and crafts share the same id type. *)
-type author_details = {
-  valid : bool [@key "Valid"];
-  foreign_blocks : int [@key "ForeignBlocks"];
-  creator_id : guid [@key "CreatorId"];
-  object_id : guid [@key "ObjectId"];
-  creator_readable_name : string [@key "CreatorReadableName"];
-  hash_v1 : string [@key "HashV1"];
-} [@@deriving show, yojson]
 
 type csi = float array [@@deriving show]
 (* Dependant on the version. From 3.0 onwards it is 80 *)
@@ -36,11 +19,11 @@ let yojson_of_col t =
   |> Option.map Array.to_list
   |> [%yojson_of: v4 list option]
 
-type blueprint = {
+type bp = {
   material_contained : float [@key "ContainedMaterialCost"];
   csi : csi [@key "CSI"] [@opaque];
   col : col [@key "COL"] [@opaque];
-  scs : blueprint list [@key "SCs"];
+  scs : bp list [@key "SCs"];
   blp : v3i list [@key "BLP"];
   blr : int list [@key "BLR"];
   bp1 : Yo.t [@key "BP1"];
@@ -69,23 +52,23 @@ type blueprint = {
   game_version : string [@key "GameVersion"];
   persistent_sub_object_index : int [@key "PersistentSubObjectIndex"];
   persistent_block_index : int [@key "PersistentBlockIndex"];
-  author_details : author_details [@key "AuthorDetails"] [@opaque];
+  author_details : Common.author_details [@key "AuthorDetails"] [@opaque];
   block_count : int [@key "BlockCount"];
 } [@@deriving show, yojson]
 let blueprint_of_yojson t =
-  let r = [%of_yojson: blueprint] t in
+  let r = [%of_yojson: bp] t in
   r
   |> check List.(fun r -> let bc = r.block_count in bc = length r.blp && bc = length r.blr && bc = length r.block_ids && bc = length r.bci)
 
-type construct = {
-  file_model_version : version [@key "FileModelVersion"];
+type t = {
+  file_model_version : Common.version [@key "FileModelVersion"];
   name : string option [@key "Name"];
   version : int [@key "Version"];
   saved_total_block_count : int [@key "SavedTotalBlockCount"];
   saved_material_cost : float [@key "SavedMaterialCost"];
   contained_material_cost : float [@key "ContainedMaterialCost"];
   item_dictionary : item_dictionary [@key "ItemDictionary"];
-  blueprint : blueprint [@key "Blueprint"];
+  blueprint : bp [@key "Blueprint"];
 } [@@deriving show, yojson]
 
 let parse_construct t =
@@ -107,5 +90,5 @@ let parse_construct t =
       )
     with Yo.Util.Type_error ("Expected string, got null", _) -> raise (Unsupported_Version "Error getting version")
   in
-  (if !Cli.verbose then Printf.printf "Blueprint version: %s\n" version);
-  construct_of_yojson t
+  (if !Cli.verbose >= 3 then Printf.printf "Blueprint version: %s\n" version);
+  t_of_yojson t

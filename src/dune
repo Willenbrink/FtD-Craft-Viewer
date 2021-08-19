@@ -1,9 +1,8 @@
-(library
- (name ftd_parser)
- (inline_tests)
- (libraries yojson str gg)
+(executable
+ (name Unto_the_beach)
+ (libraries ftd_parser raylib)
  (preprocess
-  (pps ppx_yojson_conv ppx_deriving.show ppx_inline_test ppx_expect))
+  (pps ppx_yojson_conv ppx_deriving.show))
 )
 
 (env
