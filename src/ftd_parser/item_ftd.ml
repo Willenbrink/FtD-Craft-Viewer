@@ -1,8 +1,7 @@
 open Util
-open Common
 
 type sound = {
-  sound_reference : reference [@key "SoundReference"];
+  sound_reference : Common.reference [@key "SoundReference"];
   volume : float [@key "Volume"];
   min_distance : float [@key "MinDistance"];
   pitch : float [@key "Pitch"];
@@ -105,14 +104,14 @@ type cost = {
   material : float [@key "Material"];
 } [@@deriving show, yojson]
 
-type item = {
+type t = {
   active_block_link : Yo.t option [@key "ActiveBlockLink"] [@yojson.option];
   sounds : sounds [@key "Sounds"];
   sub_objects : sub_objects [@key "SubObjects"];
-  mesh_reference : reference [@key "MeshReference"];
-  material_reference : reference [@key "MaterialReference"];
-  mirror_laterial_flip_replacement_reference : reference [@key "MirrorLaterialFlipReplacementReference"];
-  mirror_vertical_flip_replacement_reference : reference [@key "MirrorVerticalFlipReplacementReference"];
+  mesh_reference : Common.reference [@key "MeshReference"];
+  material_reference : Common.reference [@key "MaterialReference"];
+  mirror_laterial_flip_replacement_reference : Common.reference [@key "MirrorLaterialFlipReplacementReference"];
+  mirror_vertical_flip_replacement_reference : Common.reference [@key "MirrorVerticalFlipReplacementReference"];
   size_info : size_info [@key "SizeInfo"];
   attach_directions : directions [@key "AttachDirections"];
   support_directions : directions [@key "SupportDirections"];
@@ -133,16 +132,16 @@ type item = {
   display_on_inventory : bool [@key "DisplayOnInventory"];
   inventory_x_position : int [@key "InventoryXPosition"];
   inventory_y_position : int [@key "InventoryYPosition"];
-  inventory_tab_or_variant_id : reference [@key "InventoryTabOrVariantId"];
-  icon_reference : reference [@key "IconReference"];
+  inventory_tab_or_variant_id : Common.reference [@key "InventoryTabOrVariantId"];
+  icon_reference : Common.reference [@key "IconReference"];
   complexity : int [@key "Complexity"];
   unlock : Yo.t option [@key "Unlock"];
-  help_page_identifier_reference : reference [@key "HelpPageIdentifierReference"];
+  help_page_identifier_reference : Common.reference [@key "HelpPageIdentifierReference"];
   external_link : external_link [@key "ExternalLink"];
   cost : cost [@key "Cost"];
-  component_id : id [@key "ComponentId"];
+  component_id : Common.id [@key "ComponentId"];
   description : string [@key "Description"];
   release_in_feature : Yo.t option [@key "ReleaseInFeature"] [@yojson.option];
 } [@@deriving show, yojson]
 
-let parse_item t = item_of_yojson t
+let parse _ = t_of_yojson

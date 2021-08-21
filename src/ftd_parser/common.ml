@@ -3,7 +3,7 @@ open Util
 (* GUIDs are IDs used everywhere and unique to everything. That means, authors and crafts share the same id type. *)
 type guid = string [@@deriving show, yojson_of]
 let invar_guid str = Str.string_match (Str.regexp "........-....-....-....-............$") str 0
-let guid_of_yojson t = [%of_yojson: string] t |> check invar_guid
+let guid_of_yojson t = [%of_yojson: string] t |> check "GUID" invar_guid
 
 type id = {
   guid : guid [@key "Guid"];
@@ -28,4 +28,4 @@ type version = {
   major : int [@key "Major"];
   minor : int [@key "Minor"];
 } [@@deriving show, yojson]
-let version_of_yojson t = [%of_yojson: version] t |> check (fun v -> v.major = 1 && v.minor = 0)
+let version_of_yojson t = [%of_yojson: version] t |> check "Version" (fun v -> v.major = 1 && v.minor = 0)

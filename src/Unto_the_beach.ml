@@ -1,28 +1,51 @@
 open Ftd_parser
 open Util
 open Cli
-open Main
 
 let parse () =
-  let (item_fails, items) = if !read_items || !print_items then items () |>> Option.some ||> Option.some else (None,None) in
-  let (cons_fails, cons) = if !read_cons || !print_cons then constructs () |>> Option.some ||> Option.some else (None,None) in
+  let (item_fails, items) =
+    if !read_items || !print_items
+    then Lazy.force Resources.items |>> Option.some ||> Option.some
+    else (None,None)
+  in
+  let (cons_ftd_fails, cons_ftd) =
+    if !read_cons || !print_cons
+    then Lazy.force Resources.constructs_ftd |>> Option.some ||> Option.some
+    else (None,None)
+  in
+  let (cons_pers_fails, cons_pers) =
+    if !read_cons || !print_cons
+    then Lazy.force Resources.constructs_personal |>> Option.some ||> Option.some
+    else (None,None)
+  in
   (match items with
-    Some items -> if !print_items then List.iter (fun x -> x |> Item.show_item |> print_endline; print_endline "") items
+     Some items ->
+     if !print_items
+     then List.iter (fun x -> x |> Item_int.show |> print_endline; print_endline "") items
    | None -> ());
-  (match cons with
-    Some cons -> if !print_cons then List.iter (fun x -> x |> Construct_ftd.show |> print_endline; print_endline "") cons
+  (match cons_ftd with
+     Some cons ->
+     if !print_cons
+     then List.iter (fun x -> x |> Construct_int.show |> print_endline; print_endline "") cons
+   | None -> ());
+  (match cons_pers with
+     Some cons ->
+     if !print_cons
+     then List.iter (fun x -> x |> Construct_int.show |> print_endline; print_endline "") cons
    | None -> ());
   (match item_fails with
      Some i -> Printf.printf "Failed to parse %i items.\n" i
    | None -> ());
-  (match cons_fails with
-     Some i -> Printf.printf "Failed to parse %i constructs.\n" i
+  (match cons_ftd_fails with
+     Some i -> Printf.printf "Failed to parse %i constructs_ftd.\n" i
+   | None -> ());
+  (match cons_pers_fails with
+     Some i -> Printf.printf "Failed to parse %i constructs_personal.\n" i
    | None -> ())
 
 let get_construct path =
-  try_parse Construct_ftd.t_of_yojson ("CLI", path)
+  Resources.try_parse Construct_int.parse ("CLI", path)
   |> Option.get
-  |> Conversion.cons_int_of_ftd
 
 let init () =
   let open Raylib in
@@ -41,10 +64,10 @@ let init () =
   set_camera_mode cam CameraMode.Free;
   cam
 
-let render cube mat (construct : Construct_internal.t) =
+let render cube mat (construct : Construct_int.t) =
   let open Raylib in
   let blocks =
-    List.concat_map Array.to_list (Construct_internal.blocks construct)
+    List.concat_map Array.to_list (Construct_int.blocks construct)
     |> List.map (fun (b : Block.t) -> let x,y,z = b.pos in
                   Matrix.translate
                     (float_of_int x)
@@ -112,9 +135,11 @@ let () =
   try
 
     let start = Sys.time () in
-    !path
-    |> get_construct
-    |> Shaders_mesh_instanced.main;
+    parse ();
+    (* let meshes = Lazy.force Resources.meshes in *)
+    (* !path
+     * |> get_construct
+     * |> Shaders_mesh_instanced.main (Lazy.force Resources.items |> snd); *)
     let stop = Sys.time () in
     Printf.printf "Executed in %fs\n" (stop -. start)
   with exn -> Printexc.print_backtrace stdout;

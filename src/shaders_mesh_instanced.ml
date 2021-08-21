@@ -19,7 +19,7 @@ let init_raylib () =
   set_target_fps 60;
   camera
 
-let main (construct : Construct_internal.t) =
+let main items (construct : Construct_int.t) =
   let camera = init_raylib () in
   let ambient = Raylib.Vector4.create 0.8 0.8 0.8 1.0 in
   let shader, update_view_pos = Shader.load_ambient "shader.vs" "shader.fs" ambient in
@@ -30,7 +30,7 @@ let main (construct : Construct_internal.t) =
   let matrix_rotation _ = Matrix.rotate (Vector3.zero ()) 0.0 in
 
   (* draw_mesh_instanced takes a ptr. CArrays can be instantly cast to/from ptrs *)
-  let blocks : Block.t list = List.concat_map Array.to_list (Construct_internal.blocks construct) in
+  let blocks : Block.t list = List.concat_map Array.to_list (Construct_int.blocks construct) in
   let count = List.length blocks in
   let translations = CArray.from_ptr (Ctypes.allocate_n Matrix.t ~count) count in
   let rotations = CArray.from_ptr (Ctypes.allocate_n Matrix.t ~count) count in

@@ -6,13 +6,13 @@ let yojson_of_item_dictionary t = `Assoc (List.map (fun (id,x) -> (string_of_int
 
 type csi = float array [@@deriving show]
 (* Dependant on the version. From 3.0 onwards it is 80 *)
-let invar_csi t = check (fun x -> Array.length x = 65 || Array.length x = 70 || Array.length x = 80) t
+let invar_csi t = check "CSI" (fun x -> Array.length x = 65 || Array.length x = 70 || Array.length x = 80) t
 let csi_of_yojson t = [%of_yojson: float list] t |> Array.of_list |> invar_csi
 let yojson_of_csi t = Array.to_list t |> [%yojson_of: float list]
 
 (* Possible related to subobjects? Only 4 models parse without option. *)
 type col = v4 array option [@@deriving show]
-let invar_col t = Option.map (check (fun x -> Array.length x = 32)) t
+let invar_col t = Option.map (check "COL" (fun x -> Array.length x = 32)) t
 let col_of_yojson t = [%of_yojson: v4 list option] t |> Option.map Array.of_list |> invar_col
 let yojson_of_col t =
   invar_col t
@@ -58,7 +58,7 @@ type bp = {
 let blueprint_of_yojson t =
   let r = [%of_yojson: bp] t in
   r
-  |> check List.(fun r -> let bc = r.block_count in bc = length r.blp && bc = length r.blr && bc = length r.block_ids && bc = length r.bci)
+  |> check "Block counts of blueprint" List.(fun r -> let bc = r.block_count in bc = length r.blp && bc = length r.blr && bc = length r.block_ids && bc = length r.bci)
 
 type t = {
   file_model_version : Common.version [@key "FileModelVersion"];
@@ -70,25 +70,3 @@ type t = {
   item_dictionary : item_dictionary [@key "ItemDictionary"];
   blueprint : bp [@key "Blueprint"];
 } [@@deriving show, yojson]
-
-let parse_construct t =
-  let version =
-    try
-      Yo.Util.(
-        t
-        |> member "Blueprint"
-        |> member "GameVersion"
-        |> to_string
-        |> (fun str -> str,
-                       try match str |> String.split_on_char '.' |> List.map int_of_string with
-                           (3::_) -> true
-                         | (2::minor::_) -> minor >= 7
-                         | (1::_) -> false
-                         | _ -> false
-                       with _ -> false)
-        |> (fun (str,supported) -> if not supported then raise (Unsupported_Version str) else str)
-      )
-    with Yo.Util.Type_error ("Expected string, got null", _) -> raise (Unsupported_Version "Error getting version")
-  in
-  (if !Cli.verbose >= 3 then Printf.printf "Blueprint version: %s\n" version);
-  t_of_yojson t
