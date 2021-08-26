@@ -34,112 +34,39 @@ let parse () =
      then List.iter (fun x -> x |> Construct_int.show |> print_endline; print_endline "") cons
    | None -> ());
   (match item_fails with
-     Some i -> Printf.printf "Failed to parse %i items.\n" i
+     Some i ->
+     Printf.printf "Failed to parse items:\n";
+     [%show: int * string list] i
+     |> print_endline
    | None -> ());
   (match cons_ftd_fails with
-     Some i -> Printf.printf "Failed to parse %i constructs_ftd.\n" i
+     Some i ->
+     Printf.printf "Failed to parse construct_ftds:\n";
+     [%show: int * string list] i
+     |> print_endline
    | None -> ());
   (match cons_pers_fails with
-     Some i -> Printf.printf "Failed to parse %i constructs_personal.\n" i
+     Some i ->
+     Printf.printf "Failed to parse construct_personals:\n";
+     [%show: int * string list] i
+     |> print_endline
    | None -> ())
 
 let get_construct path =
   Resources.try_parse Construct_int.parse ("CLI", path)
+  |> Either.find_left
   |> Option.get
-
-let init () =
-  let open Raylib in
-  init_window 800 450 "Unto the Beach";
-  set_window_state ConfigFlags.[ Window_resizable; Msaa_4x_hint; ];
-  set_target_fps 6;
-
-  let cam =
-    Camera.create
-      (Vector3.create 10.0 10.0 10.0)
-      (Vector3.create 0.0 0.0 0.0)
-      (Vector3.create 0.0 1.0 0.0)
-      65.0
-      CameraProjection.Perspective
-  in
-  set_camera_mode cam CameraMode.Free;
-  cam
-
-let render cube mat (construct : Construct_int.t) =
-  let open Raylib in
-  let blocks =
-    List.concat_map Array.to_list (Construct_int.blocks construct)
-    |> List.map (fun (b : Block.t) -> let x,y,z = b.pos in
-                  Matrix.translate
-                    (float_of_int x)
-                    (float_of_int y)
-                    (float_of_int z)
-                )
-  in
-  let carray = CArray.of_list Matrix.t blocks in
-  draw_mesh_instanced cube mat (CArray.start carray) (CArray.length carray);
-  let pos_v = Vector3.create 0.0 0.0 0.0 in
-  let transl = Matrix.translate 0.0 0.0 0.0 in
-  draw_mesh cube mat transl
-
-let rec loop camera items construct =
-  match Raylib.window_should_close () with
-  | true -> Raylib.close_window ()
-  | false ->
-    let open Raylib in
-
-    let cube = gen_mesh_cube 10.0 10.0 10.0 in
-    let shader = load_shader "shader.vs" "" in
-    (* if Ctypes.getf shader Types.Shader.id = Unsigned.UInt.zero
-     * then failwith "Shader failed to compile"; *)
-    (* let mvp = get_shader_location shader "mvp" in *)
-    (* let view_pos = get_shader_location shader "viewPos" in *)
-    (* let instance = get_shader_location shader "instance" in *)
-    (* let ambient = get_shader_location shader "ambient" in *)
-
-    (* let ambient_vec = Vecor4.create 0.2 0.2 0.2 1.0 in
-     * set_shader_value shader ambient (to_voidp (addr ambient_vec)) ShaderUniformDataType.Vec4; *)
-
-    (* Get the locs array and assign the locations of the variables. This is necessary for the draw_mesh_instanced call.
-     * Curiously, draw_mesh works without setting these. *)
-    (* let locs = Shader.locs shader in *)
-    (* CArray.set locs ShaderLocationIndex.(Matrix_mvp |> to_int) mvp; *)
-    (* CArray.set locs ShaderLocationIndex.(Matrix_model |> to_int) instance; *)
-    (* CArray.set locs ShaderLocationIndex.(Vector_view |> to_int) view_pos; *)
-
-    let mat = load_material_default () in
-    Material.set_shader mat shader;
-    MaterialMap.set_color (CArray.get (Material.maps mat) 0) Color.red;
-
-    (* let cpos = Vector3.create 0.0 0.0 0.0 in
-     * let pos = Vector3.(create (x cpos) (y cpos) (z cpos)) in
-     * set_shader_value (Material.shader mat) view_pos (pos |> addr |> to_voidp) ShaderUniformDataType.Vec3; *)
-
-
-
-
-    update_camera (addr camera);
-    begin_drawing ();
-    clear_background Color.white;
-    begin_mode_3d camera;
-    draw_grid 20 10.0;
-    begin_shader_mode shader;
-    render cube mat construct;
-    end_shader_mode ();
-    end_mode_3d ();
-    end_drawing ();
-    loop camera items construct
 
 let () =
   Printexc.record_backtrace true;
   Arg.parse spec (fun _ -> raise Generic) "";
   try
-
     let start = Sys.time () in
-    parse ();
-    (* let meshes = Lazy.force Resources.meshes in *)
-    (* !path
-     * |> get_construct
-     * |> Shaders_mesh_instanced.main (Lazy.force Resources.items |> snd); *)
+    let cam = Shaders_mesh_instanced.init_raylib () in
+    let meshes = Lazy.force Resources.meshes in
+    !path
+    |> get_construct
+    |> Shaders_mesh_instanced.main cam (Lazy.force Resources.items |> snd);
     let stop = Sys.time () in
     Printf.printf "Executed in %fs\n" (stop -. start)
   with exn -> Printexc.print_backtrace stdout;

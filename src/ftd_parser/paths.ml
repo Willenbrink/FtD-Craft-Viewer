@@ -16,8 +16,8 @@ let find regex path =
 
 let get_files regex path =
   find regex path
-  |> List.sort (String.compare)
   |> List.map (fun path -> list_of_path path |> List.rev |> List.hd, path)
+  |> List.sort (fun (x,_) (y,_) -> String.compare x y)
 
 let constructs_ftd =
   lazy (get_files ".*\\\\.blueprint$" ftd_res)

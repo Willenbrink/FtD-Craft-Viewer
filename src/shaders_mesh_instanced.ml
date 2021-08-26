@@ -19,8 +19,7 @@ let init_raylib () =
   set_target_fps 60;
   camera
 
-let main items (construct : Construct_int.t) =
-  let camera = init_raylib () in
+let main camera items (construct : Construct_int.t) =
   let ambient = Raylib.Vector4.create 0.8 0.8 0.8 1.0 in
   let shader, update_view_pos = Shader.load_ambient "shader.vs" "shader.fs" ambient in
   let open Raylib in
