@@ -46,6 +46,26 @@ module Gg = struct
 end
 include Gg
 
+module Either = struct
+  include Either
+  type ('a,'b) t = ('a,'b) Either.t = Left of 'a | Right of 'b [@@deriving show]
+end
+
+module Matrix = struct
+  include Raylib.Matrix
+  let pp fmt t = Format.fprintf fmt "[%f,%f,%f,%f;%f,%f,%f,%f;%f,%f,%f,%f;%f,%f,%f,%f;]"
+      (m0 t) (m1 t) (m2 t) (m3 t)
+      (m4 t) (m5 t) (m6 t) (m7 t)
+      (m8 t) (m9 t) (m10 t) (m11 t)
+      (m12 t) (m13 t) (m14 t) (m15 t)
+
+  let pp fmt t = Format.fprintf fmt "\n[%i,%i,%i,%i\n;%i,%i,%i,%i\n;%i,%i,%i,%i\n;%i,%i,%i,%i;]"
+      (m0 t |> int_of_float) (m1 t |> int_of_float) (m2 t |> int_of_float) (m3 t |> int_of_float)
+      (m4 t |> int_of_float) (m5 t |> int_of_float) (m6 t |> int_of_float) (m7 t |> int_of_float)
+      (m8 t |> int_of_float) (m9 t |> int_of_float) (m10 t |> int_of_float) (m11 t |> int_of_float)
+      (m12 t |> int_of_float) (m13 t |> int_of_float) (m14 t |> int_of_float) (m15 t |> int_of_float)
+end
+
 let (|>>) (a,b) f = (f a,b)
 let (||>) (a,b) f = (a,f b)
 
@@ -64,8 +84,3 @@ let check name f x =
 let list_of_path path = String.split_on_char '/' path
 
 let tap f x = f x; x
-
-module Either = struct
-  include Either
-  type ('a,'b) t = ('a,'b) Either.t = Left of 'a | Right of 'b [@@deriving show]
-end

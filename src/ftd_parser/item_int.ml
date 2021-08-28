@@ -2,13 +2,13 @@ open Util
 
 type t = {
   (* active_block_link : Yo.t option; *)
-  (* sounds : Item_ftd.sounds;
-   * sub_objects : Item_ftd.sub_objects; *)
+  (* sounds : Item_ftd.sounds; *)
+  (* sub_objects : Item_ftd.sub_objects; *)
   mesh : Mesh_int.t;
   (* material_reference : Common.reference; *)
-  (* mirror_laterial_flip_replacement_reference : Common.reference;
-   * mirror_vertical_flip_replacement_reference : Common.reference; *)
-  (* size_info : Item_ftd.size_info; *)
+  mirror_laterial_flip_replacement_reference : Common.reference;
+  mirror_vertical_flip_replacement_reference : Common.reference;
+  size_info : Item_ftd.size_info;
   (* attach_directions : Item_ftd.directions; *)
   (* support_directions : Item_ftd.directions; *)
   (* allow_attaching_directions : Yo.t option; *)
@@ -17,10 +17,10 @@ type t = {
   (* armour_class : float; *)
   (* e_radar_cross_section : float; *)
   (* radar_relative_cross_section : float; *)
-  (* extra_settings : Item_ftd.extra_settings; *)
+  extra_settings : Item_ftd.extra_settings;
   (* drag_settings : Item_ftd.drag_settings; *)
-  (* code : Item_ftd.code; *)
-  (* item_type : int; *)
+  code : Item_ftd.code;
+  item_type : int;
   (* low_level_of_detail_color : v4; *)
   (* display_name : string; *)
   (* inventory_name_override : string; *)
@@ -41,24 +41,81 @@ type t = {
 } [@@deriving show]
 
 let item_int_of_ftd mesh_res ({
-  active_block_link; sounds; sub_objects;
-  mesh_reference; material_reference;
-  mirror_laterial_flip_replacement_reference;
-  mirror_vertical_flip_replacement_reference;
-  size_info; attach_directions; support_directions;
-  allow_attaching_directions; weight; health;
-  armour_class; e_radar_cross_section; radar_relative_cross_section;
-  extra_settings; drag_settings; code; item_type;
-  low_level_of_detail_color; display_name;
-  inventory_name_override; inventory_category_name_override;
-  display_on_inventory; inventory_x_position; inventory_y_position;
-  inventory_tab_or_variant_id; icon_reference; complexity;
-  unlock; help_page_identifier_reference; external_link;
-  cost; component_id; description; release_in_feature;
+    active_block_link;
+    sounds;
+    sub_objects;
+    mesh_reference;
+    material_reference;
+    mirror_laterial_flip_replacement_reference;
+    mirror_vertical_flip_replacement_reference;
+    size_info;
+    attach_directions;
+    support_directions;
+    allow_attaching_directions;
+    weight;
+    health;
+    armour_class;
+    e_radar_cross_section;
+    radar_relative_cross_section;
+    extra_settings;
+    drag_settings;
+    code;
+    item_type;
+    low_level_of_detail_color;
+    display_name;
+    inventory_name_override;
+    inventory_category_name_override;
+    display_on_inventory;
+    inventory_x_position;
+    inventory_y_position;
+    inventory_tab_or_variant_id;
+    icon_reference;
+    complexity;
+    unlock;
+    help_page_identifier_reference;
+    external_link;
+    cost;
+    component_id;
+    description;
+    release_in_feature;
 } : Item_ftd.t) : t = {
-  mesh = mesh_res mesh_reference.reference.guid;
-  cost = cost.material;
-  component_id;
+    (* active_block_link; *)
+    (* sounds; *)
+    (* sub_objects; *)
+    mesh = mesh_res mesh_reference.reference.guid;
+    (* material_reference; *)
+    mirror_laterial_flip_replacement_reference;
+    mirror_vertical_flip_replacement_reference;
+    size_info;
+    (* attach_directions; *)
+    (* support_directions; *)
+    (* allow_attaching_directions; *)
+    (* weight; *)
+    (* health; *)
+    (* armour_class; *)
+    (* e_radar_cross_section; *)
+    (* radar_relative_cross_section; *)
+    extra_settings;
+    (* drag_settings; *)
+    code;
+    item_type;
+    (* low_level_of_detail_color; *)
+    (* display_name; *)
+    (* inventory_name_override; *)
+    (* inventory_category_name_override; *)
+    (* display_on_inventory; *)
+    (* inventory_x_position; *)
+    (* inventory_y_position; *)
+    (* inventory_tab_or_variant_id; *)
+    (* icon_reference; *)
+    (* complexity; *)
+    (* unlock; *)
+    (* help_page_identifier_reference; *)
+    (* external_link; *)
+    cost = cost.material;
+    component_id;
+    (* description; *)
+    (* release_in_feature; *)
 }
 
 let item_int_of_dup_ftd item_res mesh_res ({
@@ -81,7 +138,6 @@ let item_int_of_dup_ftd item_res mesh_res ({
   inventory_x_position;
   inventory_y_position;
   inventory_tab_or_variant_id;
-
   mirror_laterial_flip_replacement_reference;
   mirror_vertical_flip_replacement_reference;
   component_id;
@@ -89,10 +145,44 @@ let item_int_of_dup_ftd item_res mesh_res ({
 } : Item_dup_ftd.t) : t =
   let item = item_res id_to_duplicate.reference.guid in
   {
-  mesh = mesh_res mesh_reference.reference.guid;
-  cost = item.cost;
-  component_id;
-}
+    (* active_block_link; *)
+    (* sounds; *)
+    (* sub_objects; *)
+    mesh = mesh_res mesh_reference.reference.guid;
+    (* material_reference; *)
+    mirror_laterial_flip_replacement_reference;
+    mirror_vertical_flip_replacement_reference;
+    size_info = (match size_info with Some x -> x | None -> item.size_info);
+    (* attach_directions; *)
+    (* support_directions; *)
+    (* allow_attaching_directions; *)
+    (* weight; *)
+    (* health; *)
+    (* armour_class; *)
+    (* e_radar_cross_section; *)
+    (* radar_relative_cross_section; *)
+    extra_settings = item.extra_settings;
+    (* drag_settings; *)
+    code = item.code;
+    item_type = item.item_type;
+    (* low_level_of_detail_color; *)
+    (* display_name; *)
+    (* inventory_name_override; *)
+    (* inventory_category_name_override; *)
+    (* display_on_inventory; *)
+    (* inventory_x_position; *)
+    (* inventory_y_position; *)
+    (* inventory_tab_or_variant_id; *)
+    (* icon_reference; *)
+    (* complexity; *)
+    (* unlock; *)
+    (* help_page_identifier_reference; *)
+    (* external_link; *)
+    cost = item.cost;
+    component_id;
+    (* description; *)
+    (* release_in_feature; *)
+  }
 
 let parse meshes t =
   Item_ftd.t_of_yojson t
