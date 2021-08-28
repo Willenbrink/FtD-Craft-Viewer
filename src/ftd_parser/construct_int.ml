@@ -1,4 +1,5 @@
 open Util
+open Ctypes
 
 type csi = float array [@@deriving show]
 
@@ -10,11 +11,12 @@ type blp = v3i array [@@deriving show]
 type blr = int array [@@deriving show]
 
 type bp = {
-  item_number : (int * Common.guid);
+  item_number : (int * Common.Guid.t);
   name : string option;
   blueprint_name : string option;
   blueprint_version : int;
   blocks : Block.t array;
+  blocks_carray : (Block.t * Raylib.Mesh.t * Raylib.Matrix.t CArray.t) list [@printer fun fmt _ -> fprintf fmt "<opaque>"];
   scs : bp list;
   material_contained : float;
   csi : csi;
@@ -26,8 +28,7 @@ type bp = {
   vehicle_data : Yo.t;
   design_changed : bool;
   serialised_info : Yo.t;
-  local_position : v3;
-  local_rotation : v4;
+  local_position : v3; local_rotation : v4;
   force_id : int;
   total_block_count : int;
   max_cords : v3i;
@@ -52,7 +53,7 @@ type t = {
   blueprint : bp;
 } [@@deriving show]
 
-let rec bp_int_of_ftd dict ({
+let rec bp_int_of_ftd dict item_res mesh_res ({
   name; blueprint_name; blueprint_version; material_contained;
   csi; col; scs; blp; blr; bp1; bp2; bci; bei;
   block_data; vehicle_data; design_changed; serialised_info;
@@ -61,18 +62,46 @@ let rec bp_int_of_ftd dict ({
   block_state; alive_count; block_string_data; block_string_data_ids;
   game_version; persistent_sub_object_index; persistent_block_index;
   author_details; block_count;
-} : Construct_ftd.bp) : bp = {
-  name; blueprint_name; blueprint_version; material_contained;
-  item_number = (item_number, List.assoc item_number dict);
-  csi; col;
-  scs = List.map (bp_int_of_ftd dict) scs;
-  blocks = Array.init block_count List.(fun i -> let id = nth block_ids i in ({
+} : Construct_ftd.bp) : bp =
+  let blocks =
+    Array.init block_count List.(fun i -> let id = nth block_ids i in ({
         id;
-        typ = List.assoc id dict;
+        typ = List.assoc id dict |> item_res;
         pos = nth blp i;
         rot = Rotation.of_int (nth blr i);
         color = nth bci i;
       } : Block.t));
+  in
+  let rec append xs (block, mesh, matrix) =
+    match xs with
+    | [] -> [(block, mesh, [matrix])]
+    | ((e1,e2,es)::xs) ->
+      if e1 = block
+      then (e1, e2, matrix :: es) :: xs
+      else (e1, e2, es) :: append xs (block, mesh, matrix)
+  in
+  let matrix (x,y,z) rot =
+    let trans =
+      Raylib.Matrix.translate
+      (float_of_int x)
+      (float_of_int y)
+      (float_of_int z)
+    in
+    Raylib.Matrix.multiply rot trans
+  in
+  {
+  name; blueprint_name; blueprint_version; material_contained;
+  item_number = (item_number, List.assoc item_number dict);
+  csi; col;
+  scs = List.map (bp_int_of_ftd dict item_res mesh_res) scs; blocks;
+  blocks_carray = (
+    (Array.to_list blocks
+     |> List.map (fun (b : Block.t) ->
+         (b, b.typ.mesh.mesh, matrix b.pos b.rot))
+    )
+    |> List.fold_left append []
+    |> List.map (fun (x,y,ms) -> (x,y, CArray.of_list Raylib.Matrix.t ms))
+    );
   bp1; bp2; bei; block_data; vehicle_data;
   design_changed; serialised_info;
   local_position;
@@ -89,7 +118,7 @@ let rec bp_ftd_of_int ({
   local_position; local_rotation; force_id; total_block_count;
   max_cords; min_cords; block_state; alive_count;
   block_string_data; block_string_data_ids; game_version;
-  persistent_sub_object_index; persistent_block_index; author_details;
+  persistent_sub_object_index; persistent_block_index; author_details; _
 } : bp) : Construct_ftd.bp =
   {
     material_contained; csi; col;
@@ -111,7 +140,7 @@ let rec bp_ftd_of_int ({
     persistent_block_index; author_details;
 }
 
-let cons_int_of_ftd ({name; version; file_model_version;
+let cons_int_of_ftd items meshes ({name; version; file_model_version;
                             saved_total_block_count; saved_material_cost;
                             contained_material_cost; item_dictionary; blueprint;
                            } : Construct_ftd.t) : t =
@@ -122,7 +151,7 @@ let cons_int_of_ftd ({name; version; file_model_version;
   saved_total_block_count;
   saved_material_cost;
   contained_material_cost;
-  blueprint = bp_int_of_ftd item_dictionary blueprint;
+  blueprint = bp_int_of_ftd item_dictionary items meshes blueprint;
   }
 
 let cons_ftd_of_int
@@ -139,7 +168,7 @@ let cons_ftd_of_int
   item_dictionary = (
     let rec items (bp : bp) =
       bp.item_number
-      :: (Array.to_list bp.blocks |> List.map (fun (b : Block.t) -> b.id,b.typ))
+      :: (Array.to_list bp.blocks |> List.map (fun (b : Block.t) -> b.id, b.typ.component_id.guid))
       @ List.concat_map items bp.scs
     in
     List.fold_left (fun acc b -> if List.mem_assoc (fst b) acc then acc else b :: acc) [] (items blueprint)
@@ -151,7 +180,7 @@ let blocks t =
   let rec blocks_bp bp = bp.blocks :: List.concat_map blocks_bp bp.scs in
   blocks_bp t.blueprint
 
-let parse t =
+let parse items meshes t =
   let version =
     try
       Yo.Util.(
@@ -172,4 +201,4 @@ let parse t =
   in
   (if !Cli.verbose >= 3 then Printf.printf "Blueprint version: %s\n" version);
   Construct_ftd.t_of_yojson t
-  |> cons_int_of_ftd
+  |> cons_int_of_ftd items meshes

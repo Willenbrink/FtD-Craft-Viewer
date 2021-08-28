@@ -1,8 +1,8 @@
 open Util
 
-type item_dictionary = (int * Common.guid) list [@@deriving show]
-let item_dictionary_of_yojson t = Yo.Util.to_assoc t |> List.map (fun (id,x) -> (int_of_string id, string_of_yojson x))
-let yojson_of_item_dictionary t = `Assoc (List.map (fun (id,x) -> (string_of_int id, `String x)) t)
+type item_dictionary = (int * Common.Guid.t) list [@@deriving show]
+let item_dictionary_of_yojson t = Yo.Util.to_assoc t |> List.map (fun (id,x) -> (int_of_string id, Common.Guid.t_of_yojson x))
+let yojson_of_item_dictionary t = `Assoc (List.map (fun (id,x) -> (string_of_int id, Common.Guid.yojson_of_t x)) t)
 
 type csi = float array [@@deriving show]
 (* Dependant on the version. From 3.0 onwards it is 80 *)

@@ -18,11 +18,11 @@ let parse () =
     then Lazy.force Resources.constructs_personal |>> Option.some ||> Option.some
     else (None,None)
   in
-  (match items with
-     Some items ->
-     if !print_items
-     then List.iter (fun x -> x |> Item_int.show |> print_endline; print_endline "") items
-   | None -> ());
+  (* (match items with
+   *    Some items ->
+   *    if !print_items
+   *    then List.iter (fun x -> x |> Item_int.show |> print_endline; print_endline "") items
+   *  | None -> ()); *)
   (match cons_ftd with
      Some cons ->
      if !print_cons
@@ -53,9 +53,21 @@ let parse () =
    | None -> ())
 
 let get_construct path =
-  Resources.try_parse Construct_int.parse ("CLI", path)
-  |> Either.find_left
-  |> Option.get
+  Resources.try_parse
+    (Construct_int.parse
+       Resources.item_res
+       Resources.mesh_res
+    ) ("CLI", path)
+  |> (function Left x -> x
+             | Right x -> failwith x)
+
+(* let get_construct name =
+ *   (Lazy.force Resources.constructs_ftd) @ (Lazy.force Resources.constructs_personal)
+ * |> List.find (fun (c : Construct_int.))
+ *   ;
+ *   Resources.try_parse (Construct_int.parse (Lazy.force Resources.items |> snd)) ("CLI", path)
+ *   |> Either.find_left
+ *   |> Option.get *)
 
 let () =
   Printexc.record_backtrace true;
@@ -64,9 +76,10 @@ let () =
     let start = Sys.time () in
     let cam = Shaders_mesh_instanced.init_raylib () in
     let meshes = Lazy.force Resources.meshes in
+    let items = Lazy.force Resources.items |> snd in
     !path
     |> get_construct
-    |> Shaders_mesh_instanced.main cam (Lazy.force Resources.items |> snd);
+    |> Shaders_mesh_instanced.main cam items;
     let stop = Sys.time () in
     Printf.printf "Executed in %fs\n" (stop -. start)
   with exn -> Printexc.print_backtrace stdout;

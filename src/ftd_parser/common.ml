@@ -1,12 +1,18 @@
 open Util
 
 (* GUIDs are IDs used everywhere and unique to everything. That means, authors and crafts share the same id type. *)
-type guid = string [@@deriving show, yojson_of]
-let invar_guid str = Str.string_match (Str.regexp "........-....-....-....-............$") str 0
-let guid_of_yojson t = [%of_yojson: string] t |> check "GUID" invar_guid
+module Guid : sig
+  type t [@@deriving show, yojson]
+  val t_of_string : string -> t
+end = struct
+  type t = string [@@deriving show, yojson_of]
+  let invar_guid str = Str.string_match (Str.regexp "........-....-....-....-............$") str 0
+  let t_of_yojson t = [%of_yojson: string] t |> check "GUID" invar_guid
+  let t_of_string t = t
+end
 
 type id = {
-  guid : guid [@key "Guid"];
+  guid : Guid.t [@key "Guid"];
   name : string [@key "Name"];
 } [@@deriving show, yojson]
 
@@ -18,8 +24,8 @@ type reference = {
 type author_details = {
   valid : bool [@key "Valid"];
   foreign_blocks : int [@key "ForeignBlocks"];
-  creator_id : guid [@key "CreatorId"];
-  object_id : guid [@key "ObjectId"];
+  creator_id : Guid.t [@key "CreatorId"];
+  object_id : Guid.t [@key "ObjectId"];
   creator_readable_name : string [@key "CreatorReadableName"];
   hash_v1 : string [@key "HashV1"];
 } [@@deriving show, yojson]

@@ -62,3 +62,10 @@ let check name f x =
   else x
 
 let list_of_path path = String.split_on_char '/' path
+
+let tap f x = f x; x
+
+module Either = struct
+  include Either
+  type ('a,'b) t = ('a,'b) Either.t = Left of 'a | Right of 'b [@@deriving show]
+end

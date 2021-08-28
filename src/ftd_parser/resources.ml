@@ -16,25 +16,53 @@ let count f xs =
   List.fold_left_map (fun (acc,xs) x -> match f x with Either.Left x -> ((acc,xs), Some x) | Either.Right name -> ((acc + 1, name :: xs),None)) (0,[]) xs
   ||> List.filter_map Fun.id
 
-let constructs_ftd =
-  lazy (Paths.constructs_ftd
-        |> Lazy.force
-        |> count (try_parse Construct_int.parse))
-
-let constructs_personal =
-  lazy (Paths.constructs_personal
-        |> Lazy.force
-        |> count (try_parse Construct_int.parse))
-
-let items =
-  lazy (Paths.items
-        |> Lazy.force
-        |> count (try_parse Item_int.parse))
-
 let meshes =
   lazy (Paths.meshes
         |> Lazy.force
         |> count (try_parse Mesh_int.parse))
+
+let mesh_res refer = Resolver.resolve_mesh_ref (Lazy.force meshes |> snd) refer
+
+let items =
+  lazy (
+    let ((fails,fail_names), items) =
+      Paths.items
+      |> Lazy.force
+      |> (
+        mesh_res
+        |> Item_int.parse
+        |> try_parse
+        |> count)
+    in
+    let ((fails2, fail_names2), item_dups) =
+       Paths.item_dups
+        |> Lazy.force
+        |> (
+          Item_int.parse_dups (Resolver.resolve_item_ref items) mesh_res
+          |> try_parse
+          |> count)
+    in
+    ((fails + fails2, fail_names @ fail_names2), items @ item_dups))
+
+let item_res refer = Resolver.resolve_item_ref (Lazy.force items |> snd) refer
+
+let constructs_ftd =
+  lazy (
+    Paths.constructs_ftd
+        |> Lazy.force
+        |> (Construct_int.parse item_res mesh_res
+          |> try_parse
+          |> count)
+        )
+
+let constructs_personal =
+  lazy (
+    Paths.constructs_personal
+        |> Lazy.force
+        |> (Construct_int.parse item_res mesh_res
+          |> try_parse
+          |> count)
+        )
 
 let%expect_test "Parsing items" =
   let (fails, _) = Lazy.force items in

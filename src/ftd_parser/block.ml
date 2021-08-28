@@ -5,5 +5,5 @@ type t = {
   pos : v3i;
   rot : Rotation.t;
   color : int;
-  typ : Common.guid;
+  typ : Item_int.t;
 } [@@deriving show]
