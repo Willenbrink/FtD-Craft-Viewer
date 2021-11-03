@@ -41,7 +41,12 @@ uniform vec3 viewPos;
 void main()
 {
     // Texel color fetching from texture sampler
-    vec4 texelColor = texture(texture0, fragTexCoord);
+    float dist = length(fragTexCoord - vec2(0.5,0.5)) * 2;
+    vec4 texelColor;
+    texelColor = vec4(dist / 2 * texture(texture0, fragTexCoord).xyz, 1.0);
+    if (fragTexCoord.x < 0.01 || fragTexCoord.y < 0.01
+        || 1.0 - fragTexCoord.x < 0.01 || 1.0 - fragTexCoord.y < 0.01)
+      texelColor = vec4(0.0,0.0,0.0,1.0);
     vec3 lightDot = vec3(0.0);
     vec3 normal = normalize(fragNormal);
     vec3 viewD = normalize(viewPos - fragPosition);
