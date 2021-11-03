@@ -67,7 +67,7 @@ let rec bp_int_of_ftd dict item_res mesh_res ({
     Array.init block_count List.(fun i -> let id = nth block_ids i in ({
         id;
         typ = List.assoc id dict |> item_res;
-        pos = nth blp i;
+        pos = nth blp i |> flip;
         rot = Rotation.of_int (nth blr i);
         color = nth bci i;
       } : Block.t));
@@ -125,7 +125,7 @@ let rec bp_ftd_of_int ({
   {
     material_contained; csi; col;
     scs = List.map bp_ftd_of_int scs;
-    blp = List.init (Array.length blocks) (fun i -> blocks.(i).pos);
+    blp = List.init (Array.length blocks) (fun i -> blocks.(i).pos |> flip);
     blr = List.init (Array.length blocks) (fun i -> Rotation.int_of blocks.(i).rot);
     bci = List.init (Array.length blocks) (fun i -> blocks.(i).color);
     block_ids = List.init (Array.length blocks) (fun i -> blocks.(i).id);

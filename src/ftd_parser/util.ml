@@ -84,3 +84,5 @@ let check name f x =
 let list_of_path path = String.split_on_char '/' path
 
 let tap f x = f x; x
+
+let flip (x,y,z) = (-x,y,z)
