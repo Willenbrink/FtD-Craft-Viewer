@@ -1,6 +1,6 @@
 (executable
  (name Unto_the_beach)
- (libraries ftd_parser raylib landmarks)
+ (libraries ftd_parser raylib landmarks renderer)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving.show landmarks-ppx))
 )

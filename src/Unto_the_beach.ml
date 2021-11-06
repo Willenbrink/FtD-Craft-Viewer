@@ -63,12 +63,12 @@ let () =
   Printexc.record_backtrace true;
   State.init (fun () ->
       let start = Sys.time () in
-      let cam = Shaders_mesh_instanced.init_raylib () in
+      let cam = Renderer.init_raylib () in
       let meshes = Lazy.force Resources.meshes in
       let items = Lazy.force Resources.items |> snd in
       State.path ()
       |> get_construct
-      |> Shaders_mesh_instanced.main cam items;
+      |> Renderer.main cam items;
       let stop = Sys.time () in
       Printf.printf "Executed in %fs\n" (stop -. start))
     (fun exn -> Printexc.print_backtrace stdout;

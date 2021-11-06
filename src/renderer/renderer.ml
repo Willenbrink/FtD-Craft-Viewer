@@ -20,7 +20,7 @@ let init_raylib () =
   set_target_fps 60;
   camera
 
-let[@landmark] get_selection camera (blocks : (int * Block.t * int array
+let get_selection camera (blocks : (int * Block.t * int array
                                                * Matrix.t CArray.t
                                                * Matrix.t CArray.t
                                                * Matrix.t CArray.t
@@ -55,57 +55,12 @@ let[@landmark] get_selection camera (blocks : (int * Block.t * int array
 
 let main camera items (construct : Construct_int.t) =
   let ambient = Vector4.create 0.8 0.8 0.8 1.0 in
-  let shader, update_view_pos = Shading.load_ambient "shader.vs" "shader.fs" ambient in
+  let shader, update_view_pos = Shading.load_ambient "renderer/shader.vs" "renderer/shader.fs" ambient in
   let handle_camera () =
     update_camera (addr camera);
     let cpos = Camera3D.position camera in
     Vector3.(create (x cpos) (y cpos) (z cpos))
     |> update_view_pos
-  in
-
-  let[@landmark] handle_rotation_key selection block_carrays =
-    let rot_of_key key =
-      let open Rotation in
-      Key.(match key with
-        | W -> rot X 1
-        | S -> rot X 3
-        | A -> rot Y 1
-        | D -> rot Y 3
-        | Q -> rot Z 1
-        | E -> rot Z 3
-        | _ -> rot X 0
-        )
-    in
-    let pressed_keys options = List.filter is_key_pressed options in
-
-    let keys = pressed_keys Key.[A;D;Q;E;W;S] in
-    if keys == [] && not (is_key_pressed Key.Space)
-    then block_carrays
-    else
-      (if is_key_pressed Key.Space
-       then List.map (fun (id, mesh, is, transforms, trans, rots) ->
-           id, mesh, is, transforms, trans,
-           CArray.map Matrix.t (fun _ -> Matrix.identity ()) rots
-         ) block_carrays
-       else
-         let rot =
-           List.map rot_of_key keys
-           |> List.fold_left Rotation.( * ) (Matrix.identity ())
-         in
-         List.map (fun (id, mesh, is, transforms, trans, rots) ->
-             let bp = find_bp id construct.bp in
-             let selection_rot = match selection with None -> -1 | Some (index,_,_) -> (find_block construct index : Block.t).rot |> fst in
-             (id, mesh, is, transforms, trans,
-              CArray.mapi Matrix.t (fun i m -> if bp.blocks.(is.(i)).rot |> fst = selection_rot then Matrix.multiply m rot else m) rots
-             )
-           ) block_carrays
-      )
-      |> List.map (fun (id, mesh, is, transforms, trans, rots) ->
-          (id, mesh, is,
-           CArray.mapi Matrix.t (fun i _ -> Matrix.multiply (CArray.get rots i) (CArray.get trans i)) transforms,
-           trans, rots
-          )
-        )
   in
 
   let blocks : Block.t list = List.concat_map Array.to_list (Construct_int.blocks construct) in
@@ -155,7 +110,7 @@ let main camera items (construct : Construct_int.t) =
       clear_background Color.raywhite;
       begin_mode_3d camera;
 
-      let block_carrays = handle_rotation_key selection block_carrays in
+      let block_carrays = Commands.handle_rotation_key (construct,selection) block_carrays in
 
       let selection = match get_selection camera block_carrays with
         | None -> selection

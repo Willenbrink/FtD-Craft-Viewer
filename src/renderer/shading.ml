@@ -6,6 +6,7 @@ let set_view_pos shader view_pos pos =
 (* Returns the shader and a function to be called whenever the view_pos changes *)
 let load_ambient vertex_shader fragment_shader ambient_light =
   let shader = load_shader vertex_shader fragment_shader in
+  Printf.printf "Shader ID is: %i\n" (Shader.id shader);
   if Shader.id shader = 0
   then failwith "Shader failed to compile";
 
