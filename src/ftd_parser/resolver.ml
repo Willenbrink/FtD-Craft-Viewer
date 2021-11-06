@@ -7,7 +7,7 @@ let unresolved str r =
   then ()
   else
     (unresolved_refs := r :: !unresolved_refs;
-     if !Cli.verbose >= 1
+     if State.verbose () >= 1
      then Printf.printf "%s reference %s unresolved\n" str ([%show: Common.Guid.t] r)
     )
 

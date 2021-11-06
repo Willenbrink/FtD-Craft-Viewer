@@ -1,38 +1,28 @@
 open Ftd_parser
 open Util
-open Cli
+open State
+
+let force conds resource =
+  if List.fold_left (fun acc cond -> acc || cond ()) false conds
+  then Lazy.force resource |>> Option.some ||> Option.some
+  else (None,None)
+
+let show_res cond res printer =
+  match res with
+  | None -> ()
+  | Some res ->
+    if cond ()
+    then List.iter (fun x -> (printer x ^ "\n") |> print_endline) res
 
 let parse () =
-  let (item_fails, items) =
-    if !read_items || !print_items
-    then Lazy.force Resources.items |>> Option.some ||> Option.some
-    else (None,None)
-  in
-  let (cons_ftd_fails, cons_ftd) =
-    if !read_cons || !print_cons
-    then Lazy.force Resources.constructs_ftd |>> Option.some ||> Option.some
-    else (None,None)
-  in
-  let (cons_pers_fails, cons_pers) =
-    if !read_cons || !print_cons
-    then Lazy.force Resources.constructs_personal |>> Option.some ||> Option.some
-    else (None,None)
-  in
-  (* (match items with
-   *    Some items ->
-   *    if !print_items
-   *    then List.iter (fun x -> x |> Item_int.show |> print_endline; print_endline "") items
-   *  | None -> ()); *)
-  (match cons_ftd with
-     Some cons ->
-     if !print_cons
-     then List.iter (fun x -> x |> Construct_int.show |> print_endline; print_endline "") cons
-   | None -> ());
-  (match cons_pers with
-     Some cons ->
-     if !print_cons
-     then List.iter (fun x -> x |> Construct_int.show |> print_endline; print_endline "") cons
-   | None -> ());
+  let open State in
+  let open Resources in
+  let (item_fails, items) = force [read_items; print_items] items in
+  let (cons_ftd_fails, cons_ftd) = force [read_cons; print_cons] constructs_ftd in
+  let (cons_pers_fails, cons_pers) = force [read_cons; print_cons] constructs_personal in
+  show_res print_items items Item_int.show;
+  show_res print_cons cons_ftd Construct_int.show;
+  show_res print_cons cons_pers Construct_int.show;
   (match item_fails with
      Some i ->
      Printf.printf "Failed to parse items:\n";
@@ -71,21 +61,20 @@ let get_construct path =
 
 let () =
   Printexc.record_backtrace true;
-  Arg.parse spec (fun _ -> raise Generic) "";
-  try
-    let start = Sys.time () in
-    let cam = Shaders_mesh_instanced.init_raylib () in
-    let meshes = Lazy.force Resources.meshes in
-    let items = Lazy.force Resources.items |> snd in
-    !path
-    |> get_construct
-    |> Shaders_mesh_instanced.main cam items;
-    let stop = Sys.time () in
-    Printf.printf "Executed in %fs\n" (stop -. start)
-  with exn -> Printexc.print_backtrace stdout;
-    match exn with
-      Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, json) ->
-       Printf.printf "Exception:\n%s\n\nRelevant JSON:\n%s\n" (Printexc.to_string exn) (Yo.show json)
-    | exn ->
-      Printexc.to_string exn
-      |> Printf.printf "Exception:\n%s\n"
+  State.init (fun () ->
+      let start = Sys.time () in
+      let cam = Shaders_mesh_instanced.init_raylib () in
+      let meshes = Lazy.force Resources.meshes in
+      let items = Lazy.force Resources.items |> snd in
+      State.path ()
+      |> get_construct
+      |> Shaders_mesh_instanced.main cam items;
+      let stop = Sys.time () in
+      Printf.printf "Executed in %fs\n" (stop -. start))
+    (fun exn -> Printexc.print_backtrace stdout;
+      match exn with
+      | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, json) ->
+        Printf.printf "Exception:\n%s\n\nRelevant JSON:\n%s\n" (Printexc.to_string exn) (Yo.show json)
+      | exn ->
+        Printexc.to_string exn
+        |> Printf.printf "Exception:\n%s\n")

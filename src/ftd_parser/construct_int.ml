@@ -204,6 +204,6 @@ let parse items meshes t =
       )
     with Yo.Util.Type_error ("Expected string, got null", _) -> raise (Unsupported_Version "Error getting version")
   in
-  (if !Cli.verbose >= 3 then Printf.printf "Blueprint version: %s\n" version);
+  (if State.verbose () >= 3 then Printf.printf "Blueprint version: %s\n" version);
   Construct_ftd.t_of_yojson t
   |> cons_int_of_ftd items meshes

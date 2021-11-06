@@ -69,12 +69,11 @@ end
 let (|>>) (a,b) f = (f a,b)
 let (||>) (a,b) f = (a,f b)
 
-exception Generic
 exception Invariant_violated of string
 exception Unsupported_Version of string
 
 let check name f x =
-  if !Cli.check_invars
+  if State.check_invars ()
   then
     if f x
     then x

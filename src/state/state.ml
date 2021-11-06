@@ -15,3 +15,17 @@ let spec = [
   ("--ignore-invars", Arg.Clear check_invars, "Skip the checking of data invariants");
   ("-p", Arg.String (fun p -> path := p), "Pass a path for rendering");
 ]
+
+let read_items () = !read_items
+let print_items () = !print_items
+let read_cons () = !read_cons
+let print_cons () = !print_cons
+let verbose () = !verbose
+let check_invars () = !check_invars
+let path () = !path
+
+let init f handler =
+  Arg.parse spec (fun _ -> failwith "Unknown argument") "";
+  match f () with
+  | () -> ()
+  | exception exn -> handler exn

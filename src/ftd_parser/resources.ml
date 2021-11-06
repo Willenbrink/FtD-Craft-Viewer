@@ -2,15 +2,15 @@ open Util
 
 let try_parse parser (name,path) =
   try
-    if !Cli.verbose >= 2 then Printf.printf "Reading >%s< at path >%s<\n" name path;
+    if State.verbose () >= 2 then Printf.printf "Reading >%s< at path >%s<\n" name path;
     Yojson.Safe.from_file path
     |> parser
     |> Either.left
   with
   | Unsupported_Version v ->
-    if !Cli.verbose >= 1 then Printf.printf "File %s uses unsupported version %s\n" name v; Either.right name
+    if State.verbose () >= 1 then Printf.printf "File %s uses unsupported version %s\n" name v; Either.right name
   | Invariant_violated v ->
-    if !Cli.verbose >= 1 then Printf.printf "File %s violates invariant %s\n" name v; Either.right name
+    if State.verbose () >= 1 then Printf.printf "File %s violates invariant %s\n" name v; Either.right name
 
 let count f xs =
   List.fold_left_map (fun (acc,xs) x -> match f x with Either.Left x -> ((acc,xs), Some x) | Either.Right name -> ((acc + 1, name :: xs),None)) (0,[]) xs
