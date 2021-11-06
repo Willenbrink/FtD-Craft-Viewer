@@ -40,14 +40,14 @@ let load_shader_program vs_id fs_id =
     (* if max_length > 0
      * then *)
     let log = Bigarray.(Array1.create char c_layout max_length) in
-    let len = query_single (fun arr -> get_program_info_log program max_length arr log) in
+    let len = query_single (fun arr -> get_program_info_log program max_length (Some arr) log) in
     delete_program program;
     Either.right (str_of_arr log len)
 
 let load_shader_code vs_code fs_code =
   let open Tgl4.Gl in
-  let vs_id = rl_compile_shader vs_code vertex_shader in
-  let fs_id = rl_compile_shader fs_code fragment_shader in
+  let vs_id = Raylib.rl_compile_shader vs_code vertex_shader |> Unsigned.UInt.to_int in
+  let fs_id = Raylib.rl_compile_shader fs_code fragment_shader |> Unsigned.UInt.to_int in
   let prog = load_shader_program vs_id fs_id in
   let id = match prog with
   | Right str -> failwith str
@@ -63,7 +63,7 @@ let load_shader_code vs_code fs_code =
     query_single (fun arr -> Bigarray.Array1.set arr 0 Int32.zero; get_programiv id active_uniforms arr)
   in
   ignore uniform_count;
-  id
+  (Unsigned.UInt.of_int id)
 
 (*
  *  DEBUG CODE for uniform_count
@@ -100,7 +100,8 @@ let load_shader vs_code fs_code =
   List.iter (fun (pos, name) ->
       Bigarray.Array1.set locs
         (ShaderLocationIndex.to_int pos)
-        (rlGetLocationAttrib id name)
+        (rl_get_location_attrib id name
+         |> Int64.of_int)
     ) attributes;
 
   let uniforms = ShaderLocationIndex.[
@@ -118,9 +119,8 @@ let load_shader vs_code fs_code =
   List.iter (fun (pos, name) ->
       Bigarray.Array1.set locs
         (ShaderLocationIndex.to_int pos)
-        (rlGetLocationUniform id name)
+        (rl_get_location_uniform id name
+         |> Int64.of_int)
     ) attributes;
-  let shader = Ctypes.make Shader.t in
-  Ctypes.setf shader Shader.id id;
-  Ctypes.setf shader Shader.locs locs;
-  shader
+  Shader.shader id Ctypes.(array_of_bigarray array1 locs
+                           |> coerce (array 32 int64_t) (array 32 int))

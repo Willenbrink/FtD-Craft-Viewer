@@ -101,7 +101,11 @@ let rec bp_int_of_ftd dict item_res mesh_res ({
          (b, i, matrix b.pos (b.rot |> snd)))
     )
     |> List.fold_left append []
-    |> List.map (fun (block, is, ms) -> (persistent_sub_object_index, block, Array.of_list is, CArray.of_list Raylib.Matrix.t ms))
+    |> List.map (fun (block, is, ms) ->
+        (persistent_sub_object_index,
+         block,
+         Array.of_list is,
+         CArray.of_list Raylib.Matrix.t ms))
     );
   bp1; bp2; bei; block_data; vehicle_data;
   design_changed; serialised_info;
