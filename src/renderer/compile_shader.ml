@@ -66,7 +66,7 @@ let load_shader_code vs_code fs_code =
   (Unsigned.UInt.of_int id)
 
 (*
- *  DEBUG CODE for uniform_count
+ *  TODO DEBUG CODE for uniform_count
  *     for (int i = 0; i < uniformCount; i++)
  *     {
  *         int namelen = -1;
@@ -85,7 +85,7 @@ let load_shader_code vs_code fs_code =
 
 let load_shader vs_code fs_code =
   let open Raylib in
-  let locs = Array.init 32 (fun _ -> Int64.of_int (-1)) |> Bigarray.(Array1.of_array int64 c_layout) in
+  let locs = Ctypes.CArray.of_list Ctypes.int (List.init max_shader_locations (fun _ -> -1)) in
   let id = load_shader_code vs_code fs_code in
 
   let attributes = ShaderLocationIndex.[
@@ -98,10 +98,9 @@ let load_shader vs_code fs_code =
   ]
   in
   List.iter (fun (pos, name) ->
-      Bigarray.Array1.set locs
+      Ctypes.CArray.set locs
         (ShaderLocationIndex.to_int pos)
-        (rl_get_location_attrib id name
-         |> Int64.of_int)
+        (rl_get_location_attrib id name)
     ) attributes;
 
   let uniforms = ShaderLocationIndex.[
@@ -117,10 +116,9 @@ let load_shader vs_code fs_code =
   ]
   in
   List.iter (fun (pos, name) ->
-      Bigarray.Array1.set locs
+      Ctypes.CArray.set locs
         (ShaderLocationIndex.to_int pos)
-        (rl_get_location_uniform id name
-         |> Int64.of_int)
-    ) attributes;
-  Shader.shader id Ctypes.(array_of_bigarray array1 locs
-                           |> coerce (array 32 int64_t) (array 32 int))
+        (rl_get_location_uniform id name)
+    ) uniforms;
+  Ctypes.Root.create locs |> ignore; (* TODO memory leak *)
+  Shader.shader id locs

@@ -3,9 +3,16 @@ open Raylib
 let set_view_pos shader view_pos pos =
     set_shader_value shader view_pos (pos |> addr |> to_voidp) ShaderUniformDataType.Vec3
 
+let read_file filename =
+    let ch = open_in filename in
+    let s = really_input_string ch (in_channel_length ch) in
+    close_in ch;
+    s
+
 (* Returns the shader and a function to be called whenever the view_pos changes *)
 let load_ambient vertex_shader fragment_shader ambient_light =
-  let shader = load_shader vertex_shader fragment_shader in
+  let vs,fs = (read_file vertex_shader, read_file fragment_shader) in
+  let shader = Compile_shader.load_shader vs fs in
   Printf.printf "Shader ID is: %i\n" (Shader.id shader |> Unsigned.UInt.to_int);
   if Shader.id shader |> Unsigned.UInt.to_int = 0
   then failwith "Shader failed to compile";
