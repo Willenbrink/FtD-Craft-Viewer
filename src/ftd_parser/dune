@@ -1,7 +1,7 @@
 (library
  (name ftd_parser)
  (inline_tests)
- (libraries state yojson str gg raylib)
+ (libraries state yojson str gg raylib unix)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving.show ppx_inline_test ppx_expect))
 )

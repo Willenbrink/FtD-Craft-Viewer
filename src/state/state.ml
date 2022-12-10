@@ -4,7 +4,7 @@ let read_cons = ref false
 let print_cons = ref false
 let verbose = ref 0
 let check_invars = ref true
-let path = ref ""
+let path = ref "/home/sewi/.local/share/Steam/steamapps/common/From\ The\ Depths/From_The_Depths_Data/StreamingAssets/Blueprints/Neter/SS/Tyr.blueprint"
 
 let spec = [
   ("-i", Arg.Set read_items, "Read the items");

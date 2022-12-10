@@ -1,7 +1,7 @@
 (library
  (name renderer)
  (inline_tests)
- (libraries tgls.tgl4 yojson str gg state ftd_parser raylib)
+ (libraries tgls.tgl4 yojson str gg state ftd_parser raylib raygui bogue)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving.show ppx_inline_test ppx_expect))
 )

@@ -46,8 +46,8 @@ let load_shader_program vs_id fs_id =
 
 let load_shader_code vs_code fs_code =
   let open Tgl4.Gl in
-  let vs_id = Raylib.rl_compile_shader vs_code vertex_shader |> Unsigned.UInt.to_int in
-  let fs_id = Raylib.rl_compile_shader fs_code fragment_shader |> Unsigned.UInt.to_int in
+  let vs_id = Raylib.Rlgl.compile_shader vs_code vertex_shader |> Unsigned.UInt.to_int in
+  let fs_id = Raylib.Rlgl.compile_shader fs_code fragment_shader |> Unsigned.UInt.to_int in
   let prog = load_shader_program vs_id fs_id in
   let id = match prog with
   | Right str -> failwith str
@@ -100,7 +100,7 @@ let load_shader vs_code fs_code =
   List.iter (fun (pos, name) ->
       Ctypes.CArray.set locs
         (ShaderLocationIndex.to_int pos)
-        (rl_get_location_attrib id name)
+        (Rlgl.get_location_attrib id name)
     ) attributes;
 
   let uniforms = ShaderLocationIndex.[
@@ -118,7 +118,7 @@ let load_shader vs_code fs_code =
   List.iter (fun (pos, name) ->
       Ctypes.CArray.set locs
         (ShaderLocationIndex.to_int pos)
-        (rl_get_location_uniform id name)
+        (Rlgl.get_location_uniform id name)
     ) uniforms;
   Ctypes.Root.create locs |> ignore; (* TODO memory leak *)
   Shader.shader id locs

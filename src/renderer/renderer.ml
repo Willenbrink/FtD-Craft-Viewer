@@ -55,7 +55,7 @@ let get_selection camera (blocks : (int * Block.t * int array
 
 let main camera items (construct : Construct_int.t) =
   let ambient = Vector4.create 0.8 0.8 0.8 1.0 in
-  let shader, update_view_pos = Shading.load_ambient "renderer/shader.vs" "renderer/shader.fs" ambient in
+  let shader, update_view_pos = Shading.load_ambient "src/renderer/shader.vs" "src/renderer/shader.fs" ambient in
   let handle_camera () =
     update_camera (addr camera);
     let cpos = Camera3D.position camera in

@@ -5,8 +5,8 @@ type sound = {
   volume : float [@key "Volume"];
   min_distance : float [@key "MinDistance"];
   pitch : float [@key "Pitch"];
-  priority : int [@key "Priority"];
-} [@@deriving show, yojson]
+  doppler : float [@key "Doppler"];
+  priority : int [@key "Priority"];} [@@deriving show, yojson]
 
 type sounds = {
   view_these_options : bool [@key "ViewTheseOptions"];
@@ -55,16 +55,17 @@ type extra_settings = {
   use_a_low_lod_render : Yo.t [@key "UseALowLodRender"];
   water_tight : Yo.t [@key "WaterTight"];
   block_pathfinding : Yo.t [@key "BlockPathfinding"];
-  view_mesh_when_placing : Yo.t [@key "ViewMeshWhenPlacing"];
-  local_rotation_to_forward : Yo.t [@key "LocalRotationToForward"];
-  inventory_link_up : Yo.t [@key "InventoryLinkUp"];
-  inventory_link_down : Yo.t [@key "InventoryLinkDown"];
-  inventory_link_left : Yo.t [@key "InventoryLinkLeft"];
-  inventory_link_right : Yo.t [@key "InventoryLinkRight"];
-  placeable_on_fortress : Yo.t [@key "PlaceableOnFortress"];
-  placeable_on_structure : Yo.t [@key "PlaceableOnStructure"];
-  placeable_on_vehicle : Yo.t [@key "PlaceableOnVehicle"];
-  placeable_on_sub_constructable : Yo.t [@key "PlaceableOnSubConstructable"];
+  view_mesh_when_placing : bool [@key "ViewMeshWhenPlacing"];
+  local_rotation_to_forward : bool [@key "LocalRotationToForward"];
+  inventory_link_up : bool [@key "InventoryLinkUp"];
+  inventory_link_down : bool [@key "InventoryLinkDown"];
+  inventory_link_left : bool [@key "InventoryLinkLeft"];
+  inventory_link_right : bool [@key "InventoryLinkRight"];
+  placeable_on_fortress : bool [@key "PlaceableOnFortress"];
+  placeable_on_structure : bool [@key "PlaceableOnStructure"];
+  placeable_on_vehicle : bool [@key "PlaceableOnVehicle"];
+  placeable_in_prefab : bool [@key "PlaceableInPrefab"];
+  placeable_on_sub_constructable : int [@key "PlaceableOnSubConstructable"];
   automatically_generate_collider : Yo.t [@key "AutomaticallyGenerateCollider"];
   structural_component : Yo.t [@key "StructuralComponent"];
   emp_susceptibility : Yo.t [@key "EmpSusceptibility"];
@@ -135,7 +136,7 @@ type t = {
   inventory_tab_or_variant_id : Common.reference [@key "InventoryTabOrVariantId"];
   icon_reference : Common.reference [@key "IconReference"];
   complexity : int [@key "Complexity"];
-  unlock : Yo.t option [@key "Unlock"];
+  unlock : Yo.t option [@key "Unlock"] [@yojson.option];
   help_page_identifier_reference : Common.reference [@key "HelpPageIdentifierReference"];
   external_link : external_link [@key "ExternalLink"];
   cost : cost [@key "Cost"];
