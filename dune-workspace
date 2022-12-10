@@ -1,0 +1,11 @@
+(lang dune 2.8)
+(context default)
+
+(env
+  (dev
+    (flags (:standard -warn-error -A
+    ;; Unused var
+    -w -27
+    ;; Non-exhaustive match. Dangerous! TODO FIXME
+    -w -8
+    ))))

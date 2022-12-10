@@ -1,3 +1,12 @@
 [submodule "raylib-ocaml"]
 	path = raylib-ocaml
 	url = https://github.com/tjammer/raylib-ocaml.git
+[submodule "GLFW-OCaml"]
+	path = GLFW-OCaml
+	url = git@github.com:Willenbrink/GLFW-OCaml.git
+[submodule "bogue"]
+	path = bogue
+	url = git@github.com:Willenbrink/bogue.git
+[submodule "stb_truetype"]
+	path = stb_truetype
+	url = git@github.com:Willenbrink/stb_truetype.git
